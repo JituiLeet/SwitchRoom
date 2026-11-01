@@ -1,114 +1,15 @@
-using System;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Windows.Forms;
-
-namespace SwitchMagnifier
-{
-    public class MagnifierForm : Form
-    {
-        private readonly Timer timer;
-        private readonly Label header;
-        private readonly Panel view;
-        private float zoom;
-        private bool english;
-        private Point sourceCenter;
-        private bool capturing;
-
-        public float Zoom
-        {
-            get { return zoom; }
-            set { zoom = Math.Max(1.5f, Math.Min(5.0f, value)); view.Invalidate(); }
-        }
-
-        public MagnifierForm(float initialZoom, bool useEnglish)
-        {
-            zoom = initialZoom;
-            english = useEnglish;
-            sourceCenter = Cursor.Position;
-            FormBorderStyle = FormBorderStyle.None;
-            ShowInTaskbar = false;
-            TopMost = true;
-            StartPosition = FormStartPosition.Manual;
-            Bounds = new Rectangle(Math.Max(0, Screen.PrimaryScreen.WorkingArea.Right - 390), 100, 360, 260);
-            BackColor = Color.FromArgb(20, 27, 39);
-            Padding = new Padding(3);
-
-            header = new Label { Dock = DockStyle.Top, Height = 30, BackColor = Color.FromArgb(20, 27, 39), ForeColor = Color.White, TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(10, 0, 0, 0), Cursor = Cursors.SizeAll };
-            header.Text = english ? "  Switch Magnifier  ·  drag to move  ·  Esc to close" : "  Switch 放大镜  ·  拖动移动  ·  Esc 关闭";
-            header.MouseDown += DragStart;
-            header.MouseMove += DragMove;
-            header.MouseUp += DragEnd;
-            Controls.Add(header);
-
-            view = new Panel { Dock = DockStyle.Fill, BackColor = Color.Black };
-            view.Paint += PaintMagnified;
-            view.MouseWheel += delegate(object s, MouseEventArgs e) { Zoom += e.Delta > 0 ? 0.25f : -0.25f; };
-            Controls.Add(view);
-            header.BringToFront();
-
-            timer = new Timer { Interval = 80 };
-            timer.Tick += delegate { sourceCenter = Cursor.Position; view.Invalidate(); };
-            timer.Start();
-            KeyPreview = true;
-            KeyDown += delegate(object s, KeyEventArgs e) { if (e.KeyCode == Keys.Escape) Close(); };
-            MouseWheel += delegate(object s, MouseEventArgs e) { Zoom += e.Delta > 0 ? 0.25f : -0.25f; };
-        }
-
-        private Point dragStart;
-        private Point formStart;
-        private bool dragging;
-        private void DragStart(object sender, MouseEventArgs e)
-        {
-            if (e.Button != MouseButtons.Left) return;
-            dragging = true; dragStart = Cursor.Position; formStart = Location;
-        }
-        private void DragMove(object sender, MouseEventArgs e)
-        {
-            if (dragging) Location = new Point(formStart.X + Cursor.Position.X - dragStart.X, formStart.Y + Cursor.Position.Y - dragStart.Y);
-        }
-        private void DragEnd(object sender, MouseEventArgs e) { dragging = false; }
-
-        private void PaintMagnified(object sender, PaintEventArgs e)
-        {
-            if (capturing || view.ClientSize.Width <= 0 || view.ClientSize.Height <= 0) return;
-            capturing = true;
-            Bitmap shot = null;
-            try
-            {
-                int sourceWidth = Math.Max(1, (int)(view.ClientSize.Width / zoom));
-                int sourceHeight = Math.Max(1, (int)(view.ClientSize.Height / zoom));
-                int sx = sourceCenter.X - sourceWidth / 2;
-                int sy = sourceCenter.Y - sourceHeight / 2;
-                Rectangle virtualBounds = SystemInformation.VirtualScreen;
-                sx = Math.Max(virtualBounds.Left, Math.Min(virtualBounds.Right - sourceWidth, sx));
-                sy = Math.Max(virtualBounds.Top, Math.Min(virtualBounds.Bottom - sourceHeight, sy));
-                shot = new Bitmap(sourceWidth, sourceHeight);
-                using (Graphics g = Graphics.FromImage(shot))
-                    g.CopyFromScreen(sx, sy, 0, 0, new Size(sourceWidth, sourceHeight), CopyPixelOperation.SourceCopy);
-                e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
-                e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
-                e.Graphics.DrawImage(shot, new Rectangle(0, 0, view.ClientSize.Width, view.ClientSize.Height));
-                using (Pen p = new Pen(Color.FromArgb(235, 255, 255, 255), 1))
-                {
-                    int cx = view.ClientSize.Width / 2, cy = view.ClientSize.Height / 2;
-                    e.Graphics.DrawLine(p, cx - 10, cy, cx + 10, cy);
-                    e.Graphics.DrawLine(p, cx, cy - 10, cx, cy + 10);
-                }
-            }
-            catch { }
-            finally
-            {
-                if (shot != null) shot.Dispose();
-                capturing = false;
-            }
-        }
-
-        protected override void OnFormClosed(FormClosedEventArgs e)
-        {
-            timer.Stop();
-            timer.Dispose();
-            base.OnFormClosed(e);
-        }
-    }
-}
+using System; using System.Drawing; using System.Drawing.Drawing2D; using System.Windows.Forms;
+namespace SwitchRoom {
+public class MagnifierForm:Form {
+ Panel view; Label header,footer; Timer timer; float zoom; string skin; bool en,painting; Point pan=Point.Empty;
+ public float Zoom{get{return zoom;}set{zoom=Math.Max(1.25f,Math.Min(6f,value));if(view!=null)view.Invalidate();}}
+ public MagnifierForm(float z,string s,bool english){zoom=z;skin=s;en=english;FormBorderStyle=FormBorderStyle.None;ShowInTaskbar=false;TopMost=true;Bounds=SystemInformation.VirtualScreen;BackColor=Color.Black;KeyPreview=true;
+ header=new Label{Dock=DockStyle.Top,Height=54,Font=new Font("Segoe UI",16,FontStyle.Bold),TextAlign=ContentAlignment.MiddleLeft,Padding=new Padding(24,0,0,0)};
+ footer=new Label{Dock=DockStyle.Bottom,Height=66,Font=new Font("Segoe UI",15,FontStyle.Bold),TextAlign=ContentAlignment.MiddleCenter};
+ view=new Panel{Dock=DockStyle.Fill,BackColor=Color.Black};view.Paint+=PaintView;view.MouseWheel+=delegate(object o,MouseEventArgs e){Zoom+=e.Delta>0?.25f:-.25f;};Controls.Add(view);Controls.Add(footer);Controls.Add(header);SetSkin(s);
+ KeyDown+=OnKeys;timer=new Timer{Interval=130};timer.Tick+=delegate{view.Invalidate();};timer.Start();}
+ public void SetSkin(string s){skin=s;if(s=="NS1"){header.Visible=true;header.BackColor=Color.FromArgb(25,35,42);header.ForeColor=Color.White;header.Text=en?"  ZOOM       HOME×2 EXIT       HOME LOCK       Y −   X +":"  缩放       ⌂⌂ 退出       ⌂ 锁定       Y −   X +";footer.BackColor=Color.FromArgb(12,18,24);footer.ForeColor=Color.White;footer.Text=en?"Drag / arrows: move view    Wheel: zoom    Esc: exit":"拖动 / 方向键：移动画面    滚轮：缩放    Esc：退出";}else{header.Visible=false;footer.BackColor=Color.Black;footer.ForeColor=Color.White;footer.Text=en?"  HOME  LOCK      HOME×2  EXIT       Y  ZOOM OUT       X  ZOOM IN":"  ⌂ 锁定      ⌂⌂ 退出       Y 缩小       X 放大";}if(view!=null)view.Invalidate();}
+ void OnKeys(object o,KeyEventArgs e){int d=Math.Max(10,(int)(28/zoom));if(e.KeyCode==Keys.Escape){Close();return;}if(e.KeyCode==Keys.Left)pan.X-=d;else if(e.KeyCode==Keys.Right)pan.X+=d;else if(e.KeyCode==Keys.Up)pan.Y-=d;else if(e.KeyCode==Keys.Down)pan.Y+=d;else if(e.KeyCode==Keys.Add||e.KeyCode==Keys.Oemplus)Zoom+=.25f;else if(e.KeyCode==Keys.Subtract||e.KeyCode==Keys.OemMinus)Zoom-=.25f;view.Invalidate();}
+ void PaintView(object o,PaintEventArgs e){if(painting||view.Width<1||view.Height<1)return;painting=true;Bitmap b=null;try{Hide();Application.DoEvents();Rectangle r=SystemInformation.VirtualScreen;int sw=Math.Max(1,(int)(view.Width/zoom)),sh=Math.Max(1,(int)(view.Height/zoom));Point c=Cursor.Position;int x=Math.Max(r.Left,Math.Min(r.Right-sw,c.X-sw/2+pan.X)),y=Math.Max(r.Top,Math.Min(r.Bottom-sh,c.Y-sh/2+pan.Y));b=new Bitmap(sw,sh);using(Graphics g=Graphics.FromImage(b))g.CopyFromScreen(x,y,0,0,new Size(sw,sh));e.Graphics.InterpolationMode=InterpolationMode.HighQualityBicubic;e.Graphics.DrawImage(b,new Rectangle(0,0,view.Width,view.Height));Color edge=skin=="NS1"?Color.FromArgb(0,235,165):Color.FromArgb(45,155,245);using(Pen p=new Pen(edge,5))e.Graphics.DrawRectangle(p,2,2,view.Width-5,view.Height-5);}catch{}finally{if(b!=null)b.Dispose();Show();painting=false;}}
+ protected override void OnFormClosed(FormClosedEventArgs e){if(timer!=null){timer.Stop();timer.Dispose();}base.OnFormClosed(e);}
+} }

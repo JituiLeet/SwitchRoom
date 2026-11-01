@@ -1,26 +1,26 @@
-# Switch 放大镜 | Switch Magnifier
+# Switch 缩放 | Switch Room
+版本号暂时保持 **1.0.0**。
 
-一个面向 Windows 桌面、灵感来自 Nintendo Switch 放大镜功能的屏幕局部放大工具。支持简体中文与 English，最低目标为 Windows 7。
+## NS1 / NS2 两种界面
+- NS1：深色顶部操作栏、青绿色边框、底部操作提示。
+- NS2：蓝色边框、底部黑色控制提示栏。
+- 在主界面的「界面风格设置」中切换，开启中的放大界面也会同步更新。
 
-A Windows desktop magnifier inspired by the Nintendo Switch magnifier feature. Supports Simplified Chinese and English, targeting Windows 7 and later.
+## 功能
+- 全局快捷键：Ctrl+Alt+M 开关，Ctrl+Alt+= 放大，Ctrl+Alt+- 缩小。
+- 方向键移动放大区域，滚轮调整倍率，Esc 退出。
+- 可选登录 Windows 后自动启动；最小化后驻留系统托盘。
+- 简体中文 / English；.NET Framework 4.0；最低目标 Windows 7。
 
-## 功能 / Features
+## 编译与安装
+Visual Studio 2010 或更新版本打开 SwitchRoom.sln，选择 Release 编译。使用 Inno Setup 6 打开 installer.iss 编译安装程序。
 
-- 桌面局部放大，放大倍率 1.5×–5.0× / Magnify a desktop region at 1.5×–5.0×
-- 放大镜窗口可拖动 / Draggable magnifier window
-- 鼠标滚轮调整倍率 / Change zoom with the mouse wheel
-- 简体中文与 English 界面切换 / Simplified Chinese and English UI
-- Esc 关闭放大镜 / Press Esc to close the magnifier
-- 目标框架：.NET Framework 4.0 / Target framework: .NET Framework 4.0
+## 兼容性说明
+版本号按要求保持 1.0.0。尚未在真实 Windows 7 设备上完成验证。屏幕捕获采用 CopyFromScreen，采集时会短暂隐藏程序窗口；受保护视频和安全桌面无法捕获。
+## GitHub Actions 云端编译
+1. 将源码推送到 GitHub 仓库。
+2. 打开仓库的 **Actions** 页面，选择 **Build Switch Room**。
+3. 点击 **Run workflow**，默认同时编译安装程序。
+4. 工作流完成后，在运行记录底部的 **Artifacts** 下载 `SwitchRoom-Windows-1.0.0`。
 
-## 编译 / Build
-
-1. 使用 Visual Studio 2010 或更新版本打开 `SwitchMagnifier.sln`。
-2. 选择 `Release` 配置并编译。
-3. 运行生成的 `SwitchMagnifier.exe`。目标电脑需要安装 .NET Framework 4.0 或更高版本。
-
-Open `SwitchMagnifier.sln` in Visual Studio 2010 or later, build the **Release** configuration, then run `SwitchMagnifier.exe`. The target computer needs .NET Framework 4.0 or later.
-
-## 当前版本说明 / Notes
-
-这是初始源码项目。屏幕采集使用 Windows Forms 的 `CopyFromScreen`，不同显卡、远程桌面、UAC 安全桌面及多显示器配置下的行为可能不同。当前实现为基础原型，尚未包含安装程序、系统级快捷键、开机启动或自动更新。
+工作流仅由手动 `workflow_dispatch` 触发，不会因普通 push 自动编译。编译环境使用 Windows Server 2022，并通过 NuGet 获取 .NET Framework 4.0 reference assemblies；生成的程序仍以 .NET Framework 4.0 为目标。Windows 7 实机兼容性仍需实际测试。
