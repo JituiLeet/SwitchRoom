@@ -3,7 +3,7 @@
 <PropertyGroup><Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration><Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform><ProjectGuid>{7FBB0B88-9A7D-4D58-AC28-72E45A8F6D2C}</ProjectGuid><OutputType>WinExe</OutputType><RootNamespace>SwitchRoom</RootNamespace><AssemblyName>Switch Room</AssemblyName><TargetFrameworkVersion>v4.0</TargetFrameworkVersion></PropertyGroup>
 <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' "><OutputPath>bin\Debug\</OutputPath><DebugSymbols>true</DebugSymbols><DebugType>full</DebugType><Optimize>false</Optimize><WarningLevel>4</WarningLevel></PropertyGroup>
 <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' "><OutputPath>bin\Release\</OutputPath><DebugType>pdbonly</DebugType><Optimize>true</Optimize><WarningLevel>4</WarningLevel></PropertyGroup>
-<ItemGroup><Reference Include="System"/><Reference Include="System.Core"/><Reference Include="System.Drawing"/><Reference Include="System.Windows.Forms"/><Reference Include="Microsoft.Win32"/></ItemGroup>
+<ItemGroup><Reference Include="System"/><Reference Include="System.Core"/><Reference Include="System.Drawing"/><Reference Include="System.Windows.Forms"/></ItemGroup>
 <ItemGroup><Compile Include="Program.cs"/><Compile Include="MainForm.cs"/><Compile Include="MagnifierForm.cs"/><Compile Include="NativeMethods.cs"/><Compile Include="SettingsForm.cs"/><Compile Include="Properties\AssemblyInfo.cs"/></ItemGroup>
 <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
 </Project>
