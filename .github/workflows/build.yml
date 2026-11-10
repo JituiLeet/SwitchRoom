@@ -30,18 +30,39 @@ jobs:
             -Version 1.0.3 `
             -OutputDirectory packages `
             -NonInteractive
-          $referencePath = Join-Path $PWD 'packages/Microsoft.NETFramework.ReferenceAssemblies.net40/build/.NETFramework/v4.0'
-          if (!(Test-Path $referencePath)) {
-            throw " .NET Framework 4.0 reference assemblies not found: $referencePath"
+
+          # NuGet's install directory includes the package version, so do not
+          # assume a path without the version suffix. Locate mscorlib.dll.
+          $mscorlib = Get-ChildItem -Path 'packages' -Filter 'mscorlib.dll' -File -Recurse -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+
+          # Fall back to the machine-wide .NET Framework targeting pack.
+          if ($null -eq $mscorlib) {
+            $fallback = 'C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0'
+            if (Test-Path (Join-Path $fallback 'mscorlib.dll')) {
+              $referencePath = $fallback
+            } else {
+              Write-Host 'Installed NuGet package files:'
+              Get-ChildItem -Path 'packages' -Recurse -ErrorAction SilentlyContinue |
+                Select-Object -First 120 -ExpandProperty FullName
+              throw 'Could not locate .NET Framework 4.0 reference assemblies (mscorlib.dll).'
+            }
+          } else {
+            $referencePath = $mscorlib.Directory.FullName
           }
+
+          Write-Host "Using .NET Framework 4.0 reference assemblies: $referencePath"
           "FRAMEWORK_REFERENCE_PATH=$referencePath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Build Release
         shell: pwsh
         run: |
           msbuild SwitchRoom.sln /t:Rebuild /m /p:Configuration=Release /p:Platform="Any CPU" /p:FrameworkPathOverride="$env:FRAMEWORK_REFERENCE_PATH" /verbosity:minimal
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed with exit code $LASTEXITCODE."
+          }
           if (!(Test-Path 'bin/Release/Switch Room.exe')) {
-            throw 'Build output was not found.'
+            throw 'Build output was not found: bin/Release/Switch Room.exe'
           }
 
       - name: Create portable package
@@ -64,7 +85,7 @@ jobs:
           if (!(Test-Path $iscc)) { $iscc = 'C:\Program Files\Inno Setup 6\ISCC.exe' }
           if (!(Test-Path $iscc)) { throw 'Inno Setup compiler was not found.' }
           & $iscc 'installer.iss'
-          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup compilation failed.' }
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed with exit code $LASTEXITCODE." }
           Copy-Item 'installer-output/SwitchRoom-Setup-1.0.0.exe' 'artifacts/SwitchRoom-Setup-1.0.0.exe'
 
       - name: Upload build artifacts
